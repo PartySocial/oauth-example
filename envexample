@@ -1,0 +1,4 @@
+CLIENT_ID=vxvMRIjeFv2BtNNve3rB
+CLIENT_SECRET=a7ac190b99b40316bcff
+REDIRECT_URI=http://localhost:3000/callback
+AUTH_SERVER=http://party-social.com
