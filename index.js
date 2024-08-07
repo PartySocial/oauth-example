@@ -1,5 +1,4 @@
 const express = require('express');
-const { default:axios } = require('axios');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -24,32 +23,37 @@ app.get('/login', (req, res) => {
 app.get('/callback', async (req, res) => {
   const { code, state } = req.query;
   try {
-    const tokenResponse = await axios.post(`${process.env.AUTH_SERVER}/token`, null, {
+    const tokenResponse = await (await fetch(`${process.env.AUTH_SERVER}/token`, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         code,
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      redirect_uri: process.env.REDIRECT_URI,
-      }
-    });
-    const accessToken = tokenResponse.data.access_token;
+        client_id: process.env.CLIENT_ID,
+        client_secret: process.env.CLIENT_SECRET,
+        redirect_uri: process.env.REDIRECT_URI,
+        grant_type: 'authorization_code'
+      })
+    })).json();
+    const accessToken = tokenResponse.access_token;
     res.render('callback', { accessToken });
   } catch (error) {
     console.error(error)
-    res.status(500).send('Error exchanging authorization code for access token', error);
+    res.status(500).send('Error exchanging authorization code for access token: ' + error);
   }
 });
 
 app.get('/user', async (req, res) => {
   const accessToken = req.query.token;
   try {
-    const userResponse = await axios.get(`${process.env.AUTH_SERVER}/auth/user`, {
+    const userResponse = await (await fetch(`${process.env.AUTH_SERVER}/auth/user`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         client_id: process.env.CLIENT_ID
       }
-    });
-    res.render('user', { user: userResponse.data });
+    })).json();
+    res.render('user', { user: userResponse });
   } catch (error) {
     res.status(500).send('Error retrieving user information');
   }
